@@ -1,4 +1,4 @@
-local debug_mode = true
+debug_mode = true
 
 
 local function clearFile(file)
@@ -100,24 +100,29 @@ if( debug_mode ) then
     _print("DEBUG: END OUTPUT!\n\n", logFile)
     _print("DEBUG: Retrieving all nodes from tree...", logFile)
     _print(nodes:get_all_nodes(), logFile)
-    _print("DEBUG: END OUTPUT\n\n", logFile)
+    _print("DEBUG: END OUTPUT!\n", logFile)
 end
 
 
 -- Create new buffer and return handle. If buffer already exists, just return handle.
 local function get_func_map_buffer()
-    -- BUG: The buffer holding this source code (TSQuery.lua's buffer) is returned and therefore
-    --  modified.
-    print(vim.fn.bufnr("func-map"))
-    return nil
-    if( vim.fn.bufnr("func-map") ~= -1 ) then
+    local buf = vim.fn.bufnr("func-map")
+    if( buf ~= -1 ) then
+        if( debug_mode ) then
+            _print("DEBUG: 'func-map' buffer already exists (buf " .. buf .. ").\n", logFile)
+        end
         return vim.fn.bufnr("func-map")
     else
-        local buf = vim.api.nvim_create_buf(false, true)
+        buf = vim.api.nvim_create_buf(false, true)
         if( buf == 0 ) then
+            if( debug_mode ) then
+                _print("DEBUG: Failed to create buffer.\n", logFile)
+            end
             return nil
         end
-        print("Created Buffer num: " .. buf)
+        if( debug_mode ) then
+            _print("DEBUG: Created new buffer (buffer " .. buf .. ").\n", logFile)
+        end
         vim.api.nvim_buf_set_name(buf, "func-map")
         return buf
     end
@@ -130,6 +135,12 @@ _print("Buffer = " .. map_buffer)
 -- TODO: Query nodes and get each function and its parameters.
 --      Write it all to the buffer using:
 --          - nvim_buf_set_lines
+if( debug_mode ) then
+    _print(
+    "DEBUG: Writing to the buffer:\n\tbuffer number: " .. map_buffer,
+    logFile
+    )
+end
 local write_start = 0
 for i=1,nodes:get_func_count() do
     local text = {}
@@ -141,6 +152,15 @@ for i=1,nodes:get_func_count() do
         text[j+offset] = "\t" .. params[j].dtype .. " " .. params[j].id
     end
 
+    if( debug_mode ) then
+        _print(
+            "Writing texts...\n\t\t" .. vim.inspect(text) ..
+            "\n\tOn lines...\n\t\tStart: " .. write_start ..
+            "\n\t\tEnd: " .. write_start+params.count+offset .. " (non inclusive)",
+            logFile
+        )
+    end
+
     vim.api.nvim_buf_set_lines(
         map_buffer,
         write_start,
@@ -150,5 +170,9 @@ for i=1,nodes:get_func_count() do
     )
 
     write_start = write_start + params.count + 1
+end
+
+if( debug_mode ) then
+    _print("DEBUG: END OUTPUT!", logFile)
 end
 
