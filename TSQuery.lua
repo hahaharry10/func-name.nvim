@@ -27,13 +27,6 @@ local function _print(value, file)
     end
 end
 
-
-local function create_buffer()
-    local buf = vim.api.nvim_create_buf(true, true)
-    vim.api.nvim_buf_set_name(buf, "myBuffer")
-    return buf
-end
-
 local buffnr = vim.api.nvim_get_current_buf()
 
 local language_tree = vim.treesitter.get_parser(buffnr, "c")
@@ -54,8 +47,8 @@ if( debug_mode ) then
 end
 
 
--- TODO:
---  Query only captures one parameter.
+-- TODO: Query currently only captures functions with one or more
+--      parameter. Change query to also capture functions with no parameters.
 local query = vim.treesitter.query.parse('c', [[
 (function_definition
     type: (_) @func_dtype
@@ -108,5 +101,54 @@ if( debug_mode ) then
     _print("DEBUG: Retrieving all nodes from tree...", logFile)
     _print(nodes:get_all_nodes(), logFile)
     _print("DEBUG: END OUTPUT\n\n", logFile)
+end
+
+
+-- Create new buffer and return handle. If buffer already exists, just return handle.
+local function get_func_map_buffer()
+    -- BUG: The buffer holding this source code (TSQuery.lua's buffer) is returned and therefore
+    --  modified.
+    print(vim.fn.bufnr("func-map"))
+    return nil
+    if( vim.fn.bufnr("func-map") ~= -1 ) then
+        return vim.fn.bufnr("func-map")
+    else
+        local buf = vim.api.nvim_create_buf(false, true)
+        if( buf == 0 ) then
+            return nil
+        end
+        print("Created Buffer num: " .. buf)
+        vim.api.nvim_buf_set_name(buf, "func-map")
+        return buf
+    end
+end
+
+local map_buffer = get_func_map_buffer()
+_print("Buffer = " .. map_buffer)
+
+
+-- TODO: Query nodes and get each function and its parameters.
+--      Write it all to the buffer using:
+--          - nvim_buf_set_lines
+local write_start = 0
+for i=1,nodes:get_func_count() do
+    local text = {}
+    local func_node = nodes:get_func_attributes(i)
+    text[1] = "" .. func_node.dtype .. " " .. func_node.id
+    local offset = 1
+    local params = nodes:get_params(i)
+    for j=1,params.count do
+        text[j+offset] = "\t" .. params[j].dtype .. " " .. params[j].id
+    end
+
+    vim.api.nvim_buf_set_lines(
+        map_buffer,
+        write_start,
+        write_start+params.count+offset,
+        false,
+        text
+    )
+
+    write_start = write_start + params.count + 1
 end
 

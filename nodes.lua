@@ -80,6 +80,113 @@ function nodes:get_all_nodes()
     return output
 end
 
+function nodes:get_func_count()
+    return self.count
+end
+
+-- These getter functions have the following parameters:
+-- - func_id: can either be a number or string.
+--      number -> The function is found using func_id as the index.
+--      string -> The function is found by comparing the functions name (id)
+--                  to func_id
+--   If func_id is invalid, nil is returned.
+function nodes:get_func_node(func_id)
+    if( type(func) == "number" ) then
+        if( func_id > self.count ) then
+            return nil
+        end
+        return self[func_id]
+    elseif( type(func) == "string" ) then
+        for i=1,self.count do
+            if( self[i].id == func_id ) then
+                return self[i]
+            end
+        end
+
+        return nil
+    else
+        return nil
+    end
+end
+
+-- return all function node attributes apart from the parameter data.
+function nodes:get_func_attributes(func_id)
+    if( type(func_id) == "number" ) then
+        if( func_id > self.count ) then
+            return nil
+        end
+
+        func = {}
+        func.dtype = self[func_id].dtype
+        func.id = self[func_id].id
+        func.pos = self[func_id].pos
+
+        return func
+    elseif( type(func_id) == "string" ) then
+        local func_index
+        local is_found = false
+        for i=1,self.count do
+            if( self[i].id == func_id ) then
+                func_index = i
+                is_found = true
+                break
+            end
+        end
+
+        if( not is_found ) then
+            return nil
+        end
+
+        func = {}
+        func.dtype = self[func_index].dtype
+        func.id = self[func_index].id
+        func.pos = self[func_index].pos
+
+        return func
+    else
+        return nil
+    end
+end
+
+function nodes:get_params(func_id)
+    local params = {}
+    if( type(func_id) == "number" ) then
+        if( func_id > self.count ) then
+            return nil
+        end
+
+        params.count = self[func_id].param_count
+
+        for i=1,params.count do
+            params[i] = self[func_id].params[i]
+        end
+    elseif( type(func_id) == "string" ) then
+        local func_index
+        local is_found = false
+        for i=1,self.count do
+            if( self[i].id == func_id ) then
+                func_index = i
+                is_found = true
+                break
+            end
+        end
+
+        if( not is_found ) then
+            return nil
+        end
+
+        params.count = self[func_index].param_count
+
+        for i=1,param.count do
+            params[i] = self[func_index].params[i]
+        end
+    else
+        return nil
+    end
+
+    return params
+end
+
 function nodes:hardcode_test_values()
     for i=1,self.count do
         self[i] = {}
