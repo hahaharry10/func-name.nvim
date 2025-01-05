@@ -48,7 +48,7 @@ end
 
 
 -- TODO: Query currently only captures functions with one or more
---      parameter. Change query to also capture functions with no parameters.
+--      parameter. Change query to capture functions with no parameters.
 local query = vim.treesitter.query.parse('c', [[
 (function_definition
     type: (_) @func_dtype
@@ -132,9 +132,12 @@ local map_buffer = get_func_map_buffer()
 _print("Buffer = " .. map_buffer)
 
 
--- TODO: Query nodes and get each function and its parameters.
---      Write it all to the buffer using:
---          - nvim_buf_set_lines
+-- TODO: Change format of text so that...
+--          - The function and the parameters are as follows:
+--                 `func_dtype func_id (p1_type p1_name, p2_type p2_na...)`
+--              the functions will be expanded upon user command.
+--          - When the function is activated (<TAB>) the source buffer
+--              cursor jumps to that source line.
 if( debug_mode ) then
     _print(
     "DEBUG: Writing to the buffer:\n\tbuffer number: " .. map_buffer,
