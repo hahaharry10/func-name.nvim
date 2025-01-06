@@ -74,25 +74,33 @@ if( debug_mode ) then
 end
 
 for _, captures, metadata in query:iter_matches(root, buffnr) do
-    -- nodes[i] = { func_dtype, func_id, param_dtype, param_id }
-    --      many nodes equate to the same function:
+    -- nodes[i] = { func_dtype, func_id, {func_pos_line, func_pos_col}, param_dtype, param_id, {param_pos_line, param_pos_col} }
+    -- many nodes equate to the same function as there is only one param to a node.
+    
+    -- Position only requires starting line and col number.
+    local node_pos = { {}, {} }
+    local full_pos = { vim.treesitter.get_node_range(captures[2]) }
+    node_pos[1] = { full_pos[1], full_pos[2] } 
+    full_pos = { vim.treesitter.get_node_range(captures[4]) }
+    node_pos[2] = { full_pos[1], full_pos[2] }
     if( debug_mode ) then
-        currentCapture = {}
+        local currentCapture = {}
         currentCapture[1] = vim.treesitter.get_node_text(captures[1], buffnr)
-        currentCapture[2] =vim.treesitter.get_node_text(captures[2], buffnr)
-        currentCapture[3] =vim.treesitter.get_node_range(captures[2])
-        currentCapture[4] =vim.treesitter.get_node_text(captures[3], buffnr)
-        currentCapture[5] =vim.treesitter.get_node_text(captures[4], buffnr)
-        currentCapture[6] =vim.treesitter.get_node_range(captures[4])
+        currentCapture[2] = vim.treesitter.get_node_text(captures[2], buffnr)
+        currentCapture[3] = node_pos[1]
+        currentCapture[4] = vim.treesitter.get_node_text(captures[3], buffnr)
+        currentCapture[5] = vim.treesitter.get_node_text(captures[4], buffnr)
+        currentCapture[6] = node_pos[2]
         _print(currentCapture, logFile)
     end
+
     nodes:add_param_node(
         vim.treesitter.get_node_text(captures[1], buffnr),
         vim.treesitter.get_node_text(captures[2], buffnr),
-        vim.treesitter.get_node_range(captures[2]),
+        node_pos[1],
         vim.treesitter.get_node_text(captures[3], buffnr),
         vim.treesitter.get_node_text(captures[4], buffnr),
-        vim.treesitter.get_node_range(captures[4])
+        node_pos[2]
     )
 end
 

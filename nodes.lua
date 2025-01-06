@@ -8,7 +8,9 @@ function nodes:create_empty_func_node(dtype, id, pos)
 
     self[self.count].dtype = dtype
     self[self.count].id = id
-    self[self.count].pos = pos
+    self[self.count].pos = {}
+    self[self.count].pos.line = pos[1]
+    self[self.count].pos.col = pos[2]
     self[self.count].param_count = 0
     self[self.count].params = {}
 end
@@ -16,8 +18,10 @@ end
 function nodes.create_param_node(dtype, id, pos)
     local node = {}
     node.dtype = dtype
-    node.id = string.gsub(id, "%s", "")
-    node.pos = pos
+    node.id = string.gsub(id, "%s", "") -- Remove white space in id
+    node.pos = {}
+    node.pos.line = pos[1]
+    node.pos.col = pos[2]
 
     return node
 end
@@ -35,7 +39,7 @@ function nodes:add_param_node(
 
     local is_found = false
     for i=1,self.count do
-        if( self[i].id == func_id and self[i].pos == func_pos ) then
+        if( self[i].id == func_id and self[i].pos.line == func_pos[1] and self[i].pos.col == func_pos[2] ) then
             local func_node = self[i]
             func_node.param_count = func_node.param_count + 1
             func_node.params[func_node.param_count] = self.create_param_node(
@@ -65,12 +69,14 @@ function nodes:get_all_nodes()
     local output = ""
     for i=1,self.count do
         output = output .. self[i].dtype .. " "
-        output = output .. self[i].id .. " "
-        output = output .. self[i].pos .. "\n"
+        output = output .. self[i].id .. " [ "
+        output = output .. self[i].pos.line .. " , "
+        output = output .. self[i].pos.col .. " ]" .. "\n"
         for j=1,self[i].param_count do
             output = output .. "\t" .. self[i].params[j].dtype .. " "
-            output = output .. self[i].params[j].id .. " "
-            output = output .. self[i].params[j].pos ..  "\n"
+            output = output .. self[i].params[j].id .. " [ "
+            output = output .. self[i].params[j].pos.line .. " , "
+            output = output .. self[i].params[j].pos.col .. " ]" .. "\n"
         end
         if( i ~= self.count ) then
             output = output .. "\n"
@@ -116,12 +122,11 @@ function nodes:get_func_attributes(func_id)
             return nil
         end
 
-        func = {}
-        func.dtype = self[func_id].dtype
-        func.id = self[func_id].id
-        func.pos = self[func_id].pos
-
-        return func
+        return {
+            dtype = self[func_id].dtype,
+            id = self[func_id].id,
+            pos = self[func_id].pos
+        }
     elseif( type(func_id) == "string" ) then
         local func_index
         local is_found = false
@@ -137,12 +142,11 @@ function nodes:get_func_attributes(func_id)
             return nil
         end
 
-        func = {}
-        func.dtype = self[func_index].dtype
-        func.id = self[func_index].id
-        func.pos = self[func_index].pos
-
-        return func
+        return {
+            dtype = self[func_index].dtype,
+            id = self[func_index].id,
+            pos = self[func_index].pos
+        }
     else
         return nil
     end
