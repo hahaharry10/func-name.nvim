@@ -187,3 +187,14 @@ if( debug_mode ) then
     _print("DEBUG: END OUTPUT!", logFile)
 end
 
+-- We want to only fill a fraction of the window
+local window_height = math.floor(vim.api.nvim_win_get_width(0) / 4) + 3
+
+if( debug_mode ) then
+    _print("DEBUG: Opening viewport for buffer " .. map_buffer .. " of size " .. window_height, logFile)
+end
+
+-- split window left of the screen:
+vim.cmd("abo " .. window_height .. "vs | b +set\\ signcolumn=no " .. map_buffer)
+
+
